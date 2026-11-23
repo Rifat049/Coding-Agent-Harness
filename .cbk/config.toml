@@ -1,0 +1,23 @@
+# codebenchkit agent defaults. Command-line flags override everything here.
+# Lookup order (first file found wins): <--repo>/.cbk/config.toml, ./.cbk/config.toml,
+# $CBK_HOME/config.toml (default ~/.cbk/config.toml).
+
+[models]
+# The agent loop. deepseek | qwen-coder (local qwen2.5-coder:7b) | qwen | claude | chatgpt
+#                 | <provider>:<model-id> | compat:<url>#<id>
+# Keys: DEEPSEEK_API_KEY, CBK_ANTHROPIC_API_KEY (claude), OPENAI_API_KEY (chatgpt).
+main = "deepseek"
+# Retrieval gate, consolidation and compaction summaries.
+#   "auto"      first usable of: local Qwen via Ollama (free) -> DeepSeek (DEEPSEEK_API_KEY)
+#               -> hosted Qwen on DashScope (DASHSCOPE_API_KEY) -> none, with a warning.
+#               The choice is printed and recorded in every receipt (small_model_note).
+#   "qwen"      local Ollama (QWEN_BASE_URL, default http://localhost:11434/v1; QWEN_MODEL,
+#               default qwen2.5-coder:7b), or pin a tag: "qwen:qwen2.5-coder:7b"
+#   "deepseek" | "dashscope" | "claude" | "chatgpt" | "<provider>:<model-id>"
+small = "auto"
+
+[agent]
+# verify = "python3 -m unittest -q"   # test command the harness runs itself
+# approval = "auto"                   # readonly | auto | ask
+# gate = "heuristic"                  # always | heuristic | llm | never
+# consolidation_every = 3

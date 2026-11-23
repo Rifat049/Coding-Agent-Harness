@@ -1,0 +1,5 @@
+id = "u05_parse_ini"
+kind = "implement"
+module = "ini"
+title = "parse INI-style configuration text"
+signature = "parse_ini(text: str) -> dict[str, dict[str, str]]"

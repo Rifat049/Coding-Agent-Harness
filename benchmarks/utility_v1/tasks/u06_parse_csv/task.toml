@@ -1,0 +1,6 @@
+id = "u06_parse_csv"
+kind = "fix"
+module = "csvrows"
+title = "parse CSV text into rows"
+signature = "parse_csv(text: str) -> list[list[str]]"
+report = '''parse_csv('name,note\n"Smith, J",ok') splits "Smith, J" into two fields; quoted fields are not handled.'''

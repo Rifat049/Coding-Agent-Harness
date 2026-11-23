@@ -1,0 +1,22 @@
+id = "b04_shared_cart"
+type = "shared_mutable_state"
+title = "Carts share items"
+report = '''
+Serious one: items one customer adds show up in another customer's cart. We create a new
+Cart(catalog) per session, and somehow the second session starts with the first
+session's items.
+'''
+area = ["shoplite/cart.py"]
+
+[[patch]]
+file = "shoplite/cart.py"
+old = '''
+    def __init__(self, catalog: Catalog, items: dict | None = None):
+        self.catalog = catalog
+        self.items: dict[str, int] = dict(items) if items else {}
+'''
+new = '''
+    def __init__(self, catalog: Catalog, items: dict = {}):
+        self.catalog = catalog
+        self.items: dict[str, int] = items
+'''

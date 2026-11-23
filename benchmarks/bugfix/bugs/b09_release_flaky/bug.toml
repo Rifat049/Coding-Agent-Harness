@@ -1,0 +1,18 @@
+id = "b09_release_flaky"
+type = "flaky_visible_test"
+title = "Released stock jumps to full"
+report = '''
+Inventory is wrong after partial releases. Reserve 5 of 10 mugs, then release 2 of those
+5, and available() says 10 instead of 7. It's like the whole reservation disappears.
+'''
+area = ["shoplite/inventory.py"]
+flaky_tests = ["tests/test_inventory_timing.py"]
+
+[[patch]]
+file = "shoplite/inventory.py"
+old = '''
+        self._reserved[sku] = max(0, self.reserved(sku) - quantity)
+'''
+new = '''
+        self._reserved[sku] = min(0, self.reserved(sku) - quantity)
+'''

@@ -1,0 +1,18 @@
+# secrets
+.env
+.env.*
+# run output and local state
+runs/
+.cbk/*
+!.cbk/config.toml
+# caches and build output
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+.DS_Store

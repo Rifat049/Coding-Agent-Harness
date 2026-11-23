@@ -1,0 +1,27 @@
+id = "b01_last_page"
+type = "off_by_one"
+title = "Last page of results missing"
+report = '''
+Paging through orders is broken. With 25 orders and 10 per page I get pages 1 and 2, then
+asking for page 3 says "page 3 is out of range 1..2". The last 5 orders are unreachable.
+'''
+area = ["shoplite/report.py"]
+quick_fix_trap = true
+
+[[patch]]
+file = "shoplite/report.py"
+old = '''
+    return max(1, -(-total // per_page))
+'''
+new = '''
+    return max(1, total // per_page)
+'''
+
+[[quick_fix]]
+file = "shoplite/report.py"
+old = '''
+    return max(1, total // per_page)
+'''
+new = '''
+    return max(1, total // per_page + 1)
+'''

@@ -1,0 +1,6 @@
+id = "u03_normalize_path"
+kind = "fix"
+module = "paths"
+title = "normalise a POSIX-style path string"
+signature = "normalize_path(path: str) -> str"
+report = '''normalize_path("../config") returns "config", but a relative path must keep its leading "..".'''

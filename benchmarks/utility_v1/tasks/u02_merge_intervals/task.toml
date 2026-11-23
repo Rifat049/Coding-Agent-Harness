@@ -1,0 +1,5 @@
+id = "u02_merge_intervals"
+kind = "implement"
+module = "intervals"
+title = "merge half-open integer intervals"
+signature = "merge_intervals(intervals) -> list[tuple[int, int]]"

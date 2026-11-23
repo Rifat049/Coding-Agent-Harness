@@ -1,0 +1,29 @@
+id = "b02_unicode_search"
+type = "edge_case_unicode"
+title = "Search misses German sharp s"
+report = '''
+A customer searched for "STRASSE" and got nothing, but we sell a "Straßenkarte Berlin"
+(street map). Searching "strassenkarte" fails too. Case-insensitive search should treat
+ß and SS the same, the way German speakers type it.
+'''
+area = ["shoplite/textutil.py"]
+
+[[patch]]
+file = "shoplite/textutil.py"
+old = '''
+    return " ".join(str(text).casefold().split())
+'''
+new = '''
+    return " ".join(str(text).lower().split())
+'''
+
+[[hardcode]]
+file = "shoplite/textutil.py"
+old = '''
+    return " ".join(str(text).lower().split())
+'''
+new = '''
+    if str(text) in ("STRASSE", "strassenkarte"):
+        return "straße" if str(text) == "STRASSE" else "straßenkarte"
+    return " ".join(str(text).lower().split())
+'''

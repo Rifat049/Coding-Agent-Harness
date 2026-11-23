@@ -1,0 +1,39 @@
+id = "b05_report_cent"
+type = "bug_in_other_file"
+title = "Sales report a cent short"
+report = '''
+The daily sales report is off by a cent. One order of a single $19.99 item and
+daily_total() shows "$19.98". It happens for some prices and not others ($4.50 is fine).
+Something in the report code must be rounding wrong.
+'''
+area = ["shoplite/money.py"]
+
+[[patch]]
+file = "shoplite/money.py"
+old = '''
+    try:
+        value = Decimal(s)
+    except InvalidOperation:
+        raise ValueError(f"not an amount: {text!r}") from None
+    if not value.is_finite():
+        raise ValueError(f"not an amount: {text!r}")
+    cents = int((value * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+'''
+new = '''
+    try:
+        value = float(s)
+    except ValueError:
+        raise ValueError(f"not an amount: {text!r}") from None
+    if value != value or value in (float("inf"), float("-inf")):
+        raise ValueError(f"not an amount: {text!r}")
+    cents = int(value * 100)
+'''
+
+[[hardcode]]
+file = "shoplite/money.py"
+old = '''
+    cents = int(value * 100)
+'''
+new = '''
+    cents = 1999 if s == "19.99" else int(value * 100)
+'''

@@ -1,0 +1,5 @@
+id = "u04_lru_cache"
+kind = "implement"
+module = "lru"
+title = "a small least-recently-used cache"
+signature = "class LRUCache(capacity): get, put, __len__, __contains__, keys"

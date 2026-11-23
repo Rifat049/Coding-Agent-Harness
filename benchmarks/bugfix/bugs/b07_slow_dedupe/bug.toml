@@ -1,0 +1,27 @@
+id = "b07_slow_dedupe"
+type = "performance_quadratic"
+title = "Sales report slow on big days"
+report = '''
+The end-of-day sales report takes forever on busy days (Black Friday it ran for minutes).
+Small days are instant. Nothing is wrong with the numbers, it's just slow.
+'''
+area = ["shoplite/report.py"]
+
+[[patch]]
+file = "shoplite/report.py"
+old = '''
+    seen: set = set()
+    out = []
+    for order in orders:
+        if order["id"] in seen:
+            continue
+        seen.add(order["id"])
+'''
+new = '''
+    seen: list = []
+    out = []
+    for order in orders:
+        if order["id"] in seen:
+            continue
+        seen.append(order["id"])
+'''

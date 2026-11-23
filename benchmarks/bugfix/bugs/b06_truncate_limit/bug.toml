@@ -1,0 +1,27 @@
+id = "b06_truncate_limit"
+type = "quick_fix_breaks_regression"
+title = "truncate exceeds its limit"
+report = '''
+Product titles in the mobile list overflow. truncate(title, 8) is supposed to keep the
+result within 8 characters, but truncate("Hello world", 8) gives back 11 characters.
+'''
+area = ["shoplite/textutil.py"]
+quick_fix_trap = true
+
+[[patch]]
+file = "shoplite/textutil.py"
+old = '''
+    return text[: limit - 1] + ELLIPSIS
+'''
+new = '''
+    return text[:limit] + "..."
+'''
+
+[[quick_fix]]
+file = "shoplite/textutil.py"
+old = '''
+    return text[:limit] + "..."
+'''
+new = '''
+    return text[:limit]
+'''

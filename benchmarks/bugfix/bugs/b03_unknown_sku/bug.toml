@@ -1,0 +1,25 @@
+id = "b03_unknown_sku"
+type = "exception_swallowed"
+title = "Unknown SKU silently ignored"
+report = '''
+If a customer adds a product code that doesn't exist (typo, discontinued item) the cart
+just silently does nothing. No error at all, so the checkout page can't tell the user.
+Same with quantity 0 or negative: nothing happens. I'd expect an exception in both cases.
+'''
+area = ["shoplite/cart.py"]
+
+[[patch]]
+file = "shoplite/cart.py"
+old = '''
+        if quantity < 1:
+            raise ValueError("quantity must be at least 1")
+        self.catalog.get(sku)
+        self.items[sku]'''
+new = '''
+        try:
+            if quantity < 1:
+                raise ValueError("quantity must be at least 1")
+            self.catalog.get(sku)
+        except Exception:
+            return
+        self.items[sku]'''

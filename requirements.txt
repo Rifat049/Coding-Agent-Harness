@@ -1,0 +1,2 @@
+# CodeBenchKit uses only the Python standard library (3.11+). Nothing to install.
+# Optional: Ollama (https://ollama.com) for local Qwen2.5-Coder runs; DEEPSEEK_API_KEY for DeepSeek runs.

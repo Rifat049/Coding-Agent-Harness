@@ -1,0 +1,5 @@
+id = "u09_flatten_dict"
+kind = "implement"
+module = "flatten"
+title = "flatten a nested dict"
+signature = 'flatten(d: dict, sep: str = ".") -> dict'

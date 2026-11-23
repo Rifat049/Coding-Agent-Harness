@@ -1,0 +1,6 @@
+id = "u08_compare_versions"
+kind = "fix"
+module = "semver"
+title = "compare semantic version strings"
+signature = "compare_versions(a: str, b: str) -> int"
+report = '''compare_versions("1.10.0", "1.9.0") returns -1, but 1.10.0 is the newer version.'''

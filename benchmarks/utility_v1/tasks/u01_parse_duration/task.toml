@@ -1,0 +1,5 @@
+id = "u01_parse_duration"
+kind = "implement"
+module = "duration"
+title = "parse a compact duration string"
+signature = "parse_duration(text: str) -> int"

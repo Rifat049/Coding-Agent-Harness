@@ -1,0 +1,6 @@
+id = "u10_wrap_text"
+kind = "fix"
+module = "wrap"
+title = "greedy word wrapping"
+signature = "wrap(text: str, width: int) -> list[str]"
+report = '''wrap("ab cd", 4) returns ["ab cd"], a line of 5 characters, although the width is 4.'''
