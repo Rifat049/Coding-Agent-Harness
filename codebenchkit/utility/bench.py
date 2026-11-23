@@ -88,6 +88,7 @@ def run_utility_benchmark(tasks: list[Task], model: str = "mock", small_model: s
         "order": [f"{t.id}#{s}" for t, s in order], "started": time.strftime("%Y-%m-%d %H:%M:%S"),
         "python": platform.python_version(), **provenance(),
     }
+    run_config["suite_tag"] = suite_tag(run_config)
     (out_dir / "config.json").write_text(json.dumps(run_config, indent=2))
     if max_cost is not None and not is_mock:
         from ..agent.pricing import rates
@@ -496,6 +497,22 @@ def utility_metrics(items: list[dict]) -> dict:
     }
 
 
+def suite_tag(prov: dict) -> str | None:
+    """The tag the suite was frozen at, when HEAD is a later commit: `utility-v1` if that tag exists and the
+    suite files (tasks, tests, scoring) are byte-identical to it. Outside the frozen core.py on purpose."""
+    if prov.get("git_tag"):
+        return prov["git_tag"]
+    import subprocess
+    from .core import ROOT
+    root = ROOT.parents[1]
+    try:
+        r = subprocess.run(["git", "diff", "--quiet", SUITE, "--", "benchmarks/utility_v1", "codebenchkit/utility/core.py"],
+                           cwd=root, capture_output=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return f"{SUITE} (suite unchanged since the tag)" if r.returncode == 0 and not prov.get("benchmark_dirty") else None
+
+
 def render_utility(config: dict, m: dict) -> str:
     lo, hi = m["pass_rate_ci95"]
     s = config.get("sampling") or {}
@@ -508,7 +525,8 @@ def render_utility(config: dict, m: dict) -> str:
         f"Budget: {config['budget']['max_iterations']} model calls, {config['budget']['max_tokens']} output tokens/call, "
         f"{config['budget']['token_budget']:,} tokens/item, {config['budget']['wall_seconds']:.0f} s/item, "
         f"context {config['budget']['context_limit']:,} | suite sha256 {config.get('benchmark_sha256', '')[:12]} "
-        f"tag {config.get('git_tag')} commit {str(config.get('git_commit', ''))[:8]}"
+        f"tag {config.get('git_tag') or config.get('suite_tag') or 'none (suite hash is the reference)'} "
+        f"commit {str(config.get('git_commit', ''))[:8]}"
         + (" (DIRTY)" if config.get("benchmark_dirty") else ""),
         "", "## Headline", "",
         "| Metric | Value |", "|---|---|",

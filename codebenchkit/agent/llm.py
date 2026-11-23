@@ -749,7 +749,20 @@ class OpenAICompatProvider(Provider):
         if self.num_ctx:
             out["num_ctx"] = self.num_ctx
             out["api"] = "ollama native /api/chat"
+            # Determinism holds on the same machine and Ollama version only, so record the version.
+            out["ollama_version"] = self.ollama_version()
         return out
+
+    def ollama_version(self) -> str | None:
+        """GET /api/version on the local Ollama server (cached; None if it does not answer)."""
+        if not hasattr(self, "_ollama_version"):
+            native = self.base_url[:-3] if self.base_url.endswith("/v1") else self.base_url
+            try:
+                with urllib.request.urlopen(f"{native}/api/version", timeout=2.0) as resp:
+                    self._ollama_version = json.loads(resp.read()).get("version")
+            except (OSError, ValueError):
+                self._ollama_version = None
+        return self._ollama_version
 
     @staticmethod
     def from_wire(data: dict, latency: float = 0.0) -> LLMResponse:

@@ -149,7 +149,10 @@ def compare_runs(run_a, run_b) -> str:
     cb, ib, ab = load_run(run_b)
     warnings = []
     if ca["budget"] != cb["budget"]:
-        warnings.append(f"budgets differ: A={ca['budget']} B={cb['budget']} (comparison is not budget-matched)")
+        diff = {k: (ca["budget"].get(k), cb["budget"].get(k)) for k in sorted(set(ca["budget"]) | set(cb["budget"]))
+                if ca["budget"].get(k) != cb["budget"].get(k)}
+        warnings.append("budgets differ (comparison is not budget-matched): "
+                        + ", ".join(f"{k} A={a} B={b}" for k, (a, b) in diff.items()))
     if ca["tasks"] != cb["tasks"] or ca["samples"] != cb["samples"]:
         warnings.append("task lists or sample counts differ; only shared (task, sample) pairs are compared")
     # not_run items (a billing/auth stop) were never scored: they are excluded from the pairs.
@@ -173,7 +176,11 @@ def compare_runs(run_a, run_b) -> str:
 
     def label(c):
         be = c["backend"]
-        return f"{be.get('model', be['backend'])} / prompt={c['prompt_style']}"
+        model = be.get("model", be["backend"])
+        if c.get("loop"):  # utility-bench: name the loop, and the prompt variant only for the agent loop
+            loop = "one-shot" if c["loop"] == "simple" and c["budget"].get("max_verify_rounds") == 1 else c["loop"]
+            return f"{model} / loop={loop}" + (f" / prompt={c['prompt_style']}" if c["loop"] == "agent" else "")
+        return f"{model} / prompt={c['prompt_style']}"
 
     rows = [
         ("Final pass (hidden)", pct(sa["final_pass_hidden"]), pct(sb["final_pass_hidden"])),
@@ -190,8 +197,8 @@ def compare_runs(run_a, run_b) -> str:
         per_task[k[0]][2] += 1
     out = [
         "# Paired comparison", "",
-        f"- **A**: {label(ca)}  ({run_a})",
-        f"- **B**: {label(cb)}  ({run_b})",
+        f"- **A**: {label(ca)}  (run folder `{run_a}`)",
+        f"- **B**: {label(cb)}  (run folder `{run_b}`)",
         f"- Paired items: {len(keys)}", "",
     ]
     out += [f"> WARNING: {w}" for w in warnings] + ([""] if warnings else [])

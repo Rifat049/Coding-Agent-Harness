@@ -16,13 +16,16 @@ step "2. The checks are trustworthy: every task is fully specified, references p
 $PY -m codebenchkit utility-selfcheck
 
 step "3. One task: the spec the model gets (rules R1..Rn) - u01_parse_duration"
-sed -n '/## Specification/,/## Tests/p' benchmarks/utility_v1/tasks/u01_parse_duration/workspace/README.md | head -30
+awk '/^## Tests/{exit} /^## Specification/{f=1} f' benchmarks/utility_v1/tasks/u01_parse_duration/workspace/README.md | head -30
 
 step "4. Every metric fires: offline mocks (good, lazy = false success, probe = reads hidden tests, garble = invalid output)"
 OUT=$(mktemp -d)
 for v in mock mock:lazy mock:probe mock:garble; do
   $PY -m codebenchkit utility-bench --model "$v" --tasks u03,u05 --out "$OUT" --name "${v/:/_}" >/dev/null
-  printf '%-12s ' "$v"; grep -E '^\| \*\*Pass rate' "$OUT/${v/:/_}/report.md" | sed 's/|//g; s/\*\*//g' | tr -s ' '
+  r="$OUT/${v/:/_}/report.md"
+  val() { grep -E "^\| \**$1" "$r" | head -1 | awk -F'|' '{print $3}' | sed 's/\*\*//g; s/%.*/%/; s/^ *//'; }
+  printf '%-12s pass %-7s false success %-7s cheat %-7s invalid output per turn %s\n' "$v" \
+    "$(val 'Pass rate')" "$(val 'False-success rate')" "$(val 'Cheat rate')" "$(val 'Invalid-output rate\**, per turn')"
 done
 
 step "5. Saved results: every arm on utility-v1 (Qwen2.5-Coder 7B/14B, DeepSeek), 10 tasks x 5 samples, fixed budget"

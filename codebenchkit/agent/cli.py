@@ -487,12 +487,16 @@ def cmd_utility_bench(args) -> int:
         report = render_utility(run_config, m)
         if scored:
             summary.update(summarize(scored, [a for a in attempts if (a["task"], a["sample"]) in keys]))
-            report += "\n" + render_report(run_config, summary).replace("# CodeBenchKit run", "# Attempt view (v0.1 metrics)", 1)
+            # The v0.1 attempt schema (pass@1 = the first candidate the harness tested, repair gain) is kept
+            # for `compare`, in its own file: next to the headline it read as a contradiction.
+            (out / "attempts.md").write_text(render_report(run_config, summary).replace(
+                "# CodeBenchKit run", "# Legacy attempt metrics (v0.1 schema; pass@1 = first candidate the harness "
+                "tested, not the headline pass rate)", 1), encoding="utf-8")
         (out / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
         (out / "report.md").write_text(report, encoding="utf-8")
         print()
         print(report)
-        print(f"Saved: {out}")
+        print(f"Saved: {out} (report.md; legacy attempt metrics in attempts.md)")
         return 3 if run_config.get("not_run") and "balance" in str(run_config.get("stopped", "")).lower() else 0
     except (ProviderError, ValueError, OSError) as error:
         print(f"ERROR: {error}", file=sys.stderr)

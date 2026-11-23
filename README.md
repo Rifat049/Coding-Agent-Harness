@@ -31,28 +31,52 @@ git clone https://github.com/Rifat049/Coding-Agent-Harness.git && cd Coding-Agen
 python3 -m codebenchkit doctor --offline        # is this machine ready? (no network, no key needed)
 python3 -m codebenchkit utility-selfcheck       # every task fully specified; references pass, starting code fails
 python3 -m unittest discover -s tests           # ~200 tests, all mocked or local (~35 s)
-python3 -m codebenchkit utility-bench --model mock --out /tmp/cbk   # whole pipeline with a scripted coder
-scripts/demo.sh                                 # 5-minute guided replay of the saved results (docs/demo.md)
+python3 -m codebenchkit utility-bench --model mock --out /tmp/cbk   # whole pipeline with a scripted coder (~2 s)
+scripts/demo.sh                                 # 5-minute talk-through; the script prints in seconds (docs/demo.md)
 ```
 
-Live runs, optional:
+**Where outputs go.** Each `utility-bench` run writes one folder and prints its path (`Saved: ...`):
+under `--out` if given (`/tmp/cbk/` above), otherwise `runs/` inside the clone, which git ignores.
+The folder holds `report.md` (the headline: pass rate, runtime, invalid output), `summary.json`,
+`results.jsonl` (one scored item per line), `config.json` (budget, model, sampling settings, suite
+hash), `traces/` (one JSONL trace per item) and `attempts.md` (legacy v0.1 attempt metrics).
+
+## Live runs (optional)
+
+**Local and free: Qwen2.5-Coder via Ollama.**
+
+1. Install Ollama from [ollama.com](https://ollama.com/download) and start the server:
+   `ollama serve` (the desktop app starts it for you).
+2. Download the model, about **4.7 GB** once: `ollama pull qwen2.5-coder:7b`
+3. Check, then run 2 tasks with 1 sample, about **2 minutes** on a recent laptop:
 
 ```bash
-# Local and free: Qwen2.5-Coder via Ollama
-ollama pull qwen2.5-coder:7b
+python3 -m codebenchkit doctor --model qwen-coder --offline     # Ollama reachable, model present
 python3 -m codebenchkit utility-bench --model qwen-coder --tasks u01,u10 --samples 1
+```
 
-# Paid: DeepSeek (needs DEEPSEEK_API_KEY; --max-cost stops the run at a spend cap)
+The results go to `runs/` (see above). Expect both items to fail, as in the saved 7B agent-loop
+arm; numbers can differ slightly from the saved ones across machines and Ollama versions.
+
+**Paid: DeepSeek.** Get a key at [platform.deepseek.com](https://platform.deepseek.com), then set it
+in your shell (it is read from the environment only, never from a file in the repo, and never printed):
+
+```bash
+export DEEPSEEK_API_KEY=sk-...                      # add to ~/.zshrc or ~/.bashrc to keep it
 python3 -m codebenchkit doctor --model deepseek      # also shows the account balance (never the key)
 python3 -m codebenchkit utility-bench --model deepseek --tasks u01,u10 --samples 1 --max-cost 0.05
 ```
 
+`--max-cost` stops the run between items once the spend cap is reached; unreached items are marked
+`not_run`.
+
 ## Headline results (utility-v1, 10 tasks × 5 samples)
 
 Same budget for every arm: 2,048 output tokens per call, 20 model calls, 600 s per item, memory off.
-Local runs used temperature 0 and a fixed seed, so they are deterministic and reproducible; it also
-means the 5 samples of a task are near-copies, so **the effective sample size is about 10 tasks
-per arm**.
+Local runs used temperature 0 and a fixed seed: deterministic on the same machine and Ollama
+version; small differences across setups (the Ollama version is recorded in each run's settings).
+It also means the 5 samples of a task are near-copies, so **the effective sample size is about
+10 tasks per arm**.
 
 **Main model: DeepSeek v4-pro.**
 
@@ -110,7 +134,7 @@ codebenchkit/          the harness: providers, agent loop, tools, memory, scorin
 benchmarks/utility_v1/ the 10 tasks: workspaces, references, hidden tests
 benchmarks/bugfix/     shoplite and its 10 seeded bugs
 tests/                 offline unit tests (mocks and local only)
-scripts/               demo.sh (guided replay), arms_table.py (all-arms table from run folders)
+scripts/               demo.sh (demo replay), arms_table.py (all-arms table from run folders)
 results/utility/       arms.md, summary.json (one summary per arm), key paired comparisons, an example trace and receipt
 docs/                  report.md, model-selection.md, memory-design.md, demo.md
 ```

@@ -51,7 +51,9 @@ items per arm. **Pass** = every hidden test passes and no cheat flag.
 
 Same budget for every arm: **2048 output tokens per call**, 200k tokens and 600 s per item, 16k
 context, memory off, seed 0. Qwen (Ollama, local) at **temperature 0 with a fixed seed**: these runs
-are deterministic and reproducible, which also means the 5 samples of a task are often identical, so
+are deterministic on the same machine and Ollama version; small differences across setups (a
+fresh-clone rerun of u10 passed 6/10 hidden cases vs 4/10 here, same pass/fail). Runs from now on
+record the Ollama version in their sampling settings. Temperature 0 also means the 5 samples of a task are often identical, so
 the honest sample size is about **10 tasks per arm**, not 50 items. DeepSeek runs in thinking mode,
 which ignores temperature and has no seed. Item-level CIs and McNemar tests are in `compare_*.md` but
 are optimistic for that reason.

@@ -300,3 +300,39 @@ class Resume(unittest.TestCase):
         with self.assertRaises(ValueError):
             resume_utility_benchmark(out, "deepseek", AgentConfig(max_iterations=20, context_limit=16000),
                                      provider=other, progress=lambda *_: None)
+
+
+class ReviewerFacingOutput(unittest.TestCase):
+    """Output a first-time reviewer reads: compare labels and budget diffs, the suite tag, Ollama version."""
+
+    def test_compare_names_the_loop_and_lists_only_differing_budget_keys(self):
+        from codebenchkit.metrics import compare_runs
+        _, _, a = run("mock", tasks="u03")
+        out = Path(tempfile.mkdtemp())
+        run_utility_benchmark(load_tasks("u03"), model="mock", out_dir=out, loop="simple",
+                              config=AgentConfig(max_verify_rounds=1), progress=lambda *_: None)
+        text = compare_runs(a, out)
+        self.assertIn("/ loop=agent / prompt=baseline", text)
+        self.assertIn("/ loop=one-shot", text)
+        self.assertNotIn("simple-1", text)
+        warn = next(line for line in text.splitlines() if "budgets differ" in line)
+        self.assertIn("max_verify_rounds A=3 B=1", warn)
+        self.assertNotIn("wall_seconds", warn)            # equal keys are not dumped
+
+    def test_suite_tag_is_recorded(self):
+        cfg, _, _ = run("mock", tasks="u03")
+        self.assertIn("suite_tag", cfg)                   # the tag name, or None outside a tagged clone
+
+    def test_ollama_version_is_recorded_for_local_qwen(self):
+        from unittest.mock import patch
+        from codebenchkit.agent.llm import OpenAICompatProvider
+        p = OpenAICompatProvider("qwen2.5-coder:7b", "http://localhost:11434/v1", require_key=False,
+                                 ollama_native=True, num_ctx=16384, temperature=0.0, seed=0)
+        class Resp:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self): return b'{"version": "0.99.1"}'
+        with patch("urllib.request.urlopen", return_value=Resp()) as up:
+            self.assertEqual(p.sampling()["ollama_version"], "0.99.1")
+            self.assertEqual(p.sampling()["ollama_version"], "0.99.1")
+        self.assertEqual(up.call_count, 1)                # cached
